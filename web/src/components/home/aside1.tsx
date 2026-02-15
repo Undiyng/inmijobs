@@ -1,5 +1,4 @@
-import type { UserModel } from '@/models/UserModel'
-import { getUserData } from '@/services/api/user/getUserData'
+import { useUserData } from '@/hooks/useUserData'
 import { Link } from '@tanstack/react-router'
 import {
     Newspaper,
@@ -9,22 +8,10 @@ import {
     Image as ImageIcon,
     Settings
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
 
 export const Aside1 = () => {
-    const [userData, setUserData] = useState<UserModel>()
     
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const data = await getUserData("1")
-                setUserData(data ?? undefined)
-            } catch (error) {
-                console.error('Error fetching user data:', error)
-            }
-        }
-        fetchUserData()
-    }, [])
+    const { userData } = useUserData()
 
     const menuItems = [
         { label: 'News Feed', icon: Newspaper, to: '/home', badge: 3 },

@@ -1,23 +1,10 @@
 import { Bell, Grid, MessageCircle, Search, ChevronDown } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import type { UserModel } from '@/models/UserModel'
-import { getUserData } from '@/services/api/user/getUserData'
+import { useUserData } from '@/hooks/useUserData'
 
 export const Header = () => {
-    const [userData, setUserData] = useState<UserModel>()
-
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const data = await getUserData("1")
-                setUserData(data ?? undefined)
-            } catch (error) {
-                console.error('Error fetching user data:', error)
-            }
-        }
-        fetchUserData()
-    }, [])
+    
+    const { userData } = useUserData()
 
     return (
         <nav className="flex items-center justify-between px-8 bg-white border-b-2 border-gray-500 shadow-sm">
