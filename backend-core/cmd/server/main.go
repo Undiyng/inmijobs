@@ -20,39 +20,46 @@ func main() {
 	godotenv.Load()
 
 	db, err := database.NewDatabase()
-
 	if err != nil {
 		log.Fatalf("Fatal Error connecting to database: %v", err)
 	}
 
 	authRepository := repository.NewAuthRepository(*db)
 	profileRepository := repository.NewProfileRepository(*db)
+	jobRepository := repository.NewJobRepository(db)
 
 	authService := core.NewAuthService(*authRepository)
 	profileService := core.NewProfileService(*profileRepository)
+	jobService := core.NewJobService(jobRepository)
 
 	pingHandler := api.NewPingHandler(*authService)
 	profileHandler := api.NewProfileHandler(*profileService, *authService)
-
-	jobRepository := repository.NewJobRepository(db)
-	jobService := core.NewJobService(jobRepository)
-	jobHandler := api.NewJobHandler(jobService)
+	jobHandler := api.NewJobHandler(jobService, authService)
 
 	r := chi.NewRouter()
-
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Logger)
 	r.Use(middleware.StripSlashes)
 	r.Use(httprate.LimitByIP(100, time.Minute))
 
 	r.Route("/api", func(r chi.Router) {
+		// Auth & Profile
 		r.Get("/ping", pingHandler.Ping)
 		r.Put("/profiles/me", profileHandler.UpdateProfile)
-    r.Get("/profiles/{id}",profileHandler.GetProfile)
+		r.Get("/profiles/{id}", profileHandler.GetProfile)
+
+		// Jobs
+		r.Get("/jobs", jobHandler.GetJobs)
 		r.Route("/jobs/{id}", func(r chi.Router) {
 			r.Get("/", jobHandler.GetJobByID)
 			r.Put("/", jobHandler.UpdateJob)
+			r.Delete("/", jobHandler.DeleteJob)
+			r.Post("/applications", jobHandler.CreateApplication)
+			r.Get("/applications", jobHandler.GetJobApplications)
 		})
+
+		// Company
+		r.Put("/company/{id}", jobHandler.UpdateCompany)
 	})
 
 	port := ":8080"
